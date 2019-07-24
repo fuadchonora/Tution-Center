@@ -2,7 +2,8 @@ var express = require('express');
 var router = express.Router();
 let bcrypt = require('bcrypt-nodejs');
 
-
+module.exports = function(app, connection) {
+    
 app.post('/add-class',function(req,res){
     var class_name=req.body.class_name;
     var tutor_id=req.body.tutor_id;
@@ -88,5 +89,4 @@ app.post('/add-time-table',function(req,res){
 
 });
   
-
-module.exports = router;
+}

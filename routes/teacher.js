@@ -1,36 +1,33 @@
-var express = require('express');
-var router = express.Router();
 let bcrypt = require('bcrypt-nodejs');
 
+module.exports = function(app, connection) {
+
+  app.post('/teacher/login', function (req,res,next) {
+    let username=req.body.username;
+    let password=req.body.password;
+
+    connection.query("SELECT * FROM teacher WHERE var_teacher_username = '"+username+"' and var_teacher_password = '"+password+"'", function (err, result, fields)  {
+      if(!err){
+        console.log('type',typeof(result));
+        if(result.length){
+          console.log(username+' '+password);
+          console.log(result);
+          res.end('Login Success');
+
+        }else {
+          res.end('Invalid Username or Password');
+        }
+
+      }else {
+          console.log('Server Error');
+      }
+    
+    });
+
+  });
 
 
-
-// router.post('/login', function (req,res,next) {
-//     let username=req.body.username;
-//     let password=req.body.password;
-
-//     dbconfig.get().collection('user').findOne({ email:email }, function (err, docs) {
-//         if(!err){
-//             if(docs){
-//                 if(bcrypt.compareSync(password,docs.password)){
-//                     console.log(email+' login Success');
-//                     res.redirect('/user/profile');
-//                 }else {
-//                     res.end('password missmatch');
-//                 }
-
-//             }else {
-//                 res.end('Invalid Username or Password');
-//             }
-
-//         }else {
-//             console.log('Server Error');
-//         }
-//     });
-// });
-
-
-app.post('/sign-up',function(req,res){
+  app.post('/teacher/sign-up',function(req,res){
     let teacher_name=req.body.teacher_name;
     let teacher_gender=req.body.teacher_gender;
     let teacher_dob=req.body.teacher_dob;
@@ -46,10 +43,11 @@ app.post('/sign-up',function(req,res){
     console.log("Teacher Name is "+teacher_name);
   
     var sql = "INSERT INTO teacher (var_teacher_name, var_teacher_gender, date_teacher_dob, var_teacher_ph, var_teacher_email, var_teacher_address, var_teacher_username, var_teacher_password, var_teacher_status) VALUES ?";
+    
     var values = [
       [teacher_name, teacher_gender, teacher_dob, teacher_ph, teacher_email, teacher_address, teacher_username, teacher_password, teacher_status]
     ];
-  
+    
     connection.query(sql, [values], function (err, result) {
       if (err) throw err;
       console.log("Number of records inserted: " + result.affectedRows);
@@ -58,4 +56,4 @@ app.post('/sign-up',function(req,res){
     
   });
 
-module.exports = router;
+}

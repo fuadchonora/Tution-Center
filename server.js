@@ -24,9 +24,61 @@ connection.connect(function(err) {
       throw err;
     }
     console.log('Database Connected.');
-    app.router("../")   
+    require('./router')(app, connection);
     app.listen(3000,function(){
       console.log("Started on PORT 3000");
     });
     
 });
+
+
+
+
+
+
+
+
+
+
+
+// require('./routes')(app, connection);
+
+// module.exports = function(app, db) {
+// require('./server/service/organisation')(app, db);
+// };
+
+
+// module.exports = (app, db)=>{
+// };
+
+
+// page1
+
+// funA =(arg1,arg2,arg3) => {
+// }
+
+// funB =() => {
+// }
+
+// module.exports={adduser:funA,updateUser:funB}
+
+
+
+// page2
+
+// module.exports = {
+
+// fun1:newfunction=(arg1,arg2,arg3)=> {
+
+// }
+
+
+// }
+
+
+
+
+// page3
+
+// const path = require('../../..');
+// path.funcationname
