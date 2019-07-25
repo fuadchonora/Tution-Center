@@ -7,65 +7,142 @@ app.get('/', function(req, res) {
 	res.end('Teacher Page')
 });
 
-  app.post('/login', function (req,res,next) {
+// ADD NEW TEACHER POST ACTION
+app.post('/sign-up', function(req, res, next){
+  req.assert('teacher_name', 'Name is required').notEmpty()
+  req.assert('teacher_gender', 'Gender is required').notEmpty()
+  req.assert('teacher_dob', 'Dob is required').notEmpty()
+  req.assert('teacher_ph', 'Phone No. Required').notEmpty()
+  req.assert('teacher_email', 'A valid email is required').isEmail()
+  req.assert('teacher_address', 'Address is required').notEmpty()
+  req.assert('teacher_username', 'Username is required').notEmpty()
+  req.assert('teacher_password', 'Password is required').notEmpty()
 
-    if(req.session.teacher_id){
-      res.end("already signed in");
+  var errors = req.validationErrors()
+    
+  if( !errors ) {   //No errors were found.  Passed Validation!
+		
+		/********************************************
+		 * Express-validator module
+		 
+		req.body.comment = 'a <span>comment</span>';
+		req.body.username = '   a user    ';
+
+		req.sanitize('comment').escape(); // returns 'a comment'
+		req.sanitize('username').trim(); // returns 'a user'
+    ********************************************/
+    
+		var values = {
+			var_teacher_name: req.sanitize('teacher_name').escape().trim(),
+			var_teacher_gender: req.sanitize('teacher_gender').escape().trim(),
+      date_teacher_dob: req.sanitize('teacher_dob').escape().trim(),
+      var_teacher_ph: req.sanitize('teacher_ph').escape().trim(),
+      var_teacher_email: req.sanitize('teacher_email').escape().trim(),
+      var_teacher_address: req.sanitize('teacher_address').escape().trim(),
+      var_teacher_username: req.sanitize('teacher_username').escape().trim(),
+      var_teacher_password: req.sanitize('teacher_password').escape().trim(),
+      var_teacher_status:0
     }
+		
+		req.getConnection(function(error, conn) {
+			conn.query('INSERT INTO teacher SET ?', values, function(err, result) {
+				//if(err) throw err
+				if (err) {
+					req.flash('error', err)
+					
+					// render to views/user/add.ejs
+					res.send({
+            message: 'Error in adding Teacher',
+            err_msg : err
+					})
+				} else {				
+					req.flash('success', 'Data added successfully!')
+					
+					// render to views/user/add.ejs
+					res.send({
+            message: 'Added New Teacher',
+            result : result				
+					})
+				}
+			})
+		})
+	}
+	else {   //Display errors to user
+		var error_msg = ''
+		errors.forEach(function(error) {
+			error_msg += error.msg + '<br>'
+		})
+    req.flash('error', error_msg)	
+    console.log('error', error_msg)	
+		
+		/**
+		 * Using req.body.name 
+		 * because req.param('name') is deprecated
+		 */ 
+        res.send({ 
+            message: 'error',
+            err_msg : error_msg
+        })
+    }
+})
 
-    let username=req.body.username;
-    let password=req.body.password;
 
-    connection.query("SELECT * FROM teacher WHERE var_teacher_username = '"+username+"' and var_teacher_password = '"+password+"'", function (err, result, fields)  {
-      if(!err){
-        console.log('type',typeof(result));
-        if(result.length){
-          console.log(username+' '+password);
-          console.log(result);
-          req.session.teacher_id=result.teacher_id;
-          res.end('Login Success');
+app.post('/login', function(req,res,next){
 
-        }else {
-          res.end('Invalid Username or Password');
-        }
+  req.assert('username', 'Username is required').notEmpty()
+  req.assert('password', 'Password is required').notEmpty()
 
-      }else {
-          console.log('Server Error');
-      }
-    
-    });
+  var errors = req.validationErrors()
 
-  });
+  if(!errors){   //validation successfull
 
-
-  app.post('/sign-up',function(req,res){
-    let teacher_name=req.body.teacher_name;
-    let teacher_gender=req.body.teacher_gender;
-    let teacher_dob=req.body.teacher_dob;
-    let teacher_ph=req.body.teacher_ph;
-    let teacher_email=req.body.teacher_email;
-    let teacher_address=req.body.teacher_address;
-
-    let teacher_username=req.body.teacher_username;
-    let teacher_password=req.body.teacher_password;
-    
-    let teacher_status=0;
-  
-    
-    console.log("Teacher Name is "+teacher_name);
-  
-    var sql = "INSERT INTO teacher (var_teacher_name, var_teacher_gender, date_teacher_dob, var_teacher_ph, var_teacher_email, var_teacher_address, var_teacher_username, var_teacher_password, var_teacher_status) VALUES ?";
-    
     var values = [
-      [teacher_name, teacher_gender, teacher_dob, teacher_ph, teacher_email, teacher_address, teacher_username, teacher_password, teacher_status]
-    ];
-    
-    connection.query(sql, [values], function (err, result) {
-      if (err) throw err;
-      console.log("Number of records inserted: " + result.affectedRows);
-      res.end("Inserted");
-    });
-    
-  });
+      req.sanitize('username').escape().trim(),
+      req.sanitize('password').escape().trim()
+    ]
 
-  module.exports = app
+    console.log(values);
+
+    req.getConnection(function(error, conn) {
+      conn.query('SELECT * FROM teacher WHERE var_teacher_username = ? and var_teacher_password = ?', values, function(err, rows, fields) {
+        if(err) throw err
+        
+        // if user not found
+        if (rows.length <= 0) {
+          req.flash('error', 'User not found')
+          res.send({
+            message: 'User Not Found'
+          })
+        }
+        else { // if user found
+          // render to user
+          res.send({
+            message: 'Login Success', 
+            result: rows
+          })
+        }
+      })
+    })
+
+  }else{   //Display errors to user  if validation error occures
+		var error_msg = ''
+		errors.forEach(function(error) {
+			error_msg += error.msg + '<br>'
+		})
+    req.flash('error', error_msg)	
+    console.log('error', error_msg)	
+		
+		/**
+		 * Using req.body.name 
+		 * because req.param('name') is deprecated
+		 */ 
+        res.send({ 
+            message: 'error',
+            err_msg : error_msg
+        })
+
+  }
+
+})
+
+module.exports = app;

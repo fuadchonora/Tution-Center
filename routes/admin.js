@@ -8,50 +8,100 @@ app.get('/', function(req, res) {
 
 
 app.post('/login', function(req,res){
-    if(req.session.admin_id){
-        res.end(req.session.admin_id+" already signed in");
+    req.assert('username', 'Username is required').notEmpty()
+    req.assert('password', 'Password is required').notEmpty()
+  
+    var errors = req.validationErrors()
+  
+    if(!errors){   //validation successfull
+  
+      var values = [
+        req.sanitize('username').escape().trim(),
+        req.sanitize('password').escape().trim()
+      ]
+  
+      console.log(values);
+  
+      req.getConnection(function(error, conn) {
+        conn.query('SELECT * FROM admin WHERE var_admin_username = ? and var_admin_password = ?', values, function(err, rows, fields) {
+          if(err) throw err
+          
+          // if user not found
+          if (rows.length <= 0) {
+            req.flash('error', 'Invalid Username or Password')
+            res.send({
+              message: 'Invalid Username or Password'
+            })
+          }
+          else { // if user found
+            // render to user
+            res.send({
+              message: 'Login Success', 
+              result: rows
+            })
+          }
+        })
+      })
+  
+    }else{   //Display errors to user  if validation error occures
+          var error_msg = ''
+          errors.forEach(function(error) {
+              error_msg += error.msg + '<br>'
+          })
+      req.flash('error', error_msg)	
+      console.log('error', error_msg)	
+          
+          /**
+           * Using req.body.name 
+           * because req.param('name') is deprecated
+           */ 
+          res.send({ 
+              message: 'error',
+              err_msg : error_msg
+          })
+  
     }
-
-    console.log(req.session.admin_id);
-  
-    let username=req.body.username;
-    let password=req.body.password;
-  
-    connection.query("SELECT * FROM admin WHERE var_admin_username = '"+username+"' and var_admin_password = '"+password+"'", function (err, result, fields)  {
-        if(!err){
-            console.log('type',typeof(result));
-            if(result.length){
-                console.log(username+' '+password);
-                console.log(result);
-                req.session.admin_id=result.admin_id;
-                res.end('Login Success');
-  
-            }else {
-                res.end('Invalid Username or Password');
-            }
-  
-        }else {
-            console.log('Server Error');
-        }
-      
-    });
 });
     
 
 app.post('/add-class',function(req,res){
-    var class_name=req.body.class_name;
-    var tutor_id=req.body.tutor_id;
+
+    req.assert('class_name', 'Class Name is Required');
+    req.assert('tutor_id', 'Tutor Name is Required');
+
     console.log("Class Name is "+class_name+", tutor id is "+tutor_id);
 
-    var sql = "INSERT INTO class (var_class_name, fk_int_tutor_id) VALUES ?";
-    var values = [
-        [class_name, tutor_id]
-    ];
-    connection.query(sql, [values], function (err, result) {
-        if (err) throw err;
-        console.log("Number of records inserted: " + result.affectedRows);
-        res.end("Inserted");
-    });
+    var errors = req.validationErrors();
+
+    if(!errors){  //validation Successfull
+        let values= {
+            "var_class_name": req.sanitize('class_name').escape().trim(),
+            "fk_int_tutor_id": req.sanitize('tutor_id').escape().trim()
+        }
+
+        req.getConnection(function(error, conn){
+            conn.query('INSERT INTO class values ?',values, function(err, result){
+                if (err) {
+					req.flash('error', err)
+					
+					// error in teacher Sign-up
+					res.send({
+                        message: 'Error in adding Teacher',
+                        err_msg : err
+					})
+				} else {
+					req.flash('success', 'Data added successfully!')
+					
+					// render success message
+					res.send({
+                        message: 'Added New Teacher',
+                        result : result		
+					})
+				}
+            })
+        })
+
+    }
 
 });
 
