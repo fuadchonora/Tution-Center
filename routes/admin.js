@@ -66,10 +66,8 @@ app.post('/login', function(req,res){
 
 app.post('/add-class',function(req,res){
 
-    req.assert('class_name', 'Class Name is Required');
-    req.assert('tutor_id', 'Tutor Name is Required');
-
-    console.log("Class Name is "+class_name+", tutor id is "+tutor_id);
+    req.assert('class_name', 'Class Name is Required').notEmpty();
+    req.assert('tutor_id', 'Tutor Name is Required').notEmpty();
 
     var errors = req.validationErrors();
 
@@ -80,25 +78,48 @@ app.post('/add-class',function(req,res){
         }
 
         req.getConnection(function(error, conn){
-            conn.query('INSERT INTO class values ?',values, function(err, result){
-                if (err) {
-					req.flash('error', err)
-					
-					// error in teacher Sign-up
-					res.send({
-                        message: 'Error in adding Teacher',
+
+            conn.query('SELECT * FROM class WHERE var_class_name = ?', req.sanitize('class_name').escape().trim(), function(err, rows, fields) {
+                if(err){
+                    req.flash('error', err)
+                    res.send({
+                        message: 'Error in adding Class',
                         err_msg : err
-					})
-				} else {
-					req.flash('success', 'Data added successfully!')
-					
-					// render success message
-					res.send({
-                        message: 'Added New Teacher',
-                        result : result		
-					})
-				}
+                    })
+                    throw err
+                }
+                
+                
+                if (rows.length <= 0) {   // if class not exist
+
+                    conn.query('INSERT INTO class SET ?',values, function(err, result){
+                        if (err) {
+                            req.flash('error', err)
+                            
+                            // error in adding class
+                            res.send({
+                                message: 'Error in adding Class',
+                                err_msg : err
+                            })
+                        } else {
+                            req.flash('success', 'Data added successfully!')
+                            
+                            // render success message
+                            res.send({
+                                message: 'Added New Class',
+                                result : result
+                           })
+                        }
+                    })
+                }
+                else { // if class exist
+                    res.send({
+                        message: 'Class already exist',
+                        result: rows
+                    })
+                }
             })
+
         })
 
     }
