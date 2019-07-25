@@ -1,9 +1,43 @@
 var express = require('express');
-var router = express.Router();
-let bcrypt = require('bcrypt-nodejs');
+var app = express();
 
-module.exports = function(app, connection) {
+app.get('/', function(req, res) {
+	// to views admin page template
+	res.end('Admin Page')
+});
+
+
+app.post('/login', function(req,res){
+    if(req.session.admin_id){
+        res.end(req.session.admin_id+" already signed in");
+    }
+
+    console.log(req.session.admin_id);
+  
+    let username=req.body.username;
+    let password=req.body.password;
+  
+    connection.query("SELECT * FROM admin WHERE var_admin_username = '"+username+"' and var_admin_password = '"+password+"'", function (err, result, fields)  {
+        if(!err){
+            console.log('type',typeof(result));
+            if(result.length){
+                console.log(username+' '+password);
+                console.log(result);
+                req.session.admin_id=result.admin_id;
+                res.end('Login Success');
+  
+            }else {
+                res.end('Invalid Username or Password');
+            }
+  
+        }else {
+            console.log('Server Error');
+        }
+      
+    });
+});
     
+
 app.post('/add-class',function(req,res){
     var class_name=req.body.class_name;
     var tutor_id=req.body.tutor_id;
@@ -19,9 +53,10 @@ app.post('/add-class',function(req,res){
         res.end("Inserted");
     });
 
-    });
+});
 
-    app.post('/add-subject',function(req,res){
+
+app.post('/add-subject',function(req,res){
     var sub_name=req.body.sub_name;
     var teacher_id=req.body.teacher_id;
     console.log("Subject Name is "+sub_name+", teacher id is "+teacher_id);
@@ -38,6 +73,7 @@ app.post('/add-class',function(req,res){
     });
 
 });
+
 
 app.post('/add-student',function(req,res){
     let class_id=req.body.class_id;
@@ -65,7 +101,6 @@ app.post('/add-student',function(req,res){
 });
 
 
-
 app.post('/add-time-table',function(req,res){
     let tt_id=req.body.tt_id;
     let teacher_id=req.body.teacher_id;
@@ -88,5 +123,5 @@ app.post('/add-time-table',function(req,res){
     });
 
 });
-  
-}
+
+module.exports = app;

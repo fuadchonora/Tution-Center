@@ -1,8 +1,18 @@
-let bcrypt = require('bcrypt-nodejs');
+var express = require('express');
+var app = express();
 
-module.exports = function(app, connection) {
 
-  app.post('/teacher/login', function (req,res,next) {
+app.get('/', function(req, res) {
+	// to views teacher page template
+	res.end('Teacher Page')
+});
+
+  app.post('/login', function (req,res,next) {
+
+    if(req.session.teacher_id){
+      res.end("already signed in");
+    }
+
     let username=req.body.username;
     let password=req.body.password;
 
@@ -12,6 +22,7 @@ module.exports = function(app, connection) {
         if(result.length){
           console.log(username+' '+password);
           console.log(result);
+          req.session.teacher_id=result.teacher_id;
           res.end('Login Success');
 
         }else {
@@ -27,13 +38,14 @@ module.exports = function(app, connection) {
   });
 
 
-  app.post('/teacher/sign-up',function(req,res){
+  app.post('/sign-up',function(req,res){
     let teacher_name=req.body.teacher_name;
     let teacher_gender=req.body.teacher_gender;
     let teacher_dob=req.body.teacher_dob;
     let teacher_ph=req.body.teacher_ph;
     let teacher_email=req.body.teacher_email;
     let teacher_address=req.body.teacher_address;
+
     let teacher_username=req.body.teacher_username;
     let teacher_password=req.body.teacher_password;
     
@@ -56,4 +68,4 @@ module.exports = function(app, connection) {
     
   });
 
-}
+  module.exports = app
