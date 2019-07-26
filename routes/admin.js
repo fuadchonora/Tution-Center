@@ -6,7 +6,7 @@ app.get('/', function(req, res) {
 	res.end('Admin Page')
 });
 
-
+//POST METHOD FOR ADMIN LOGIN
 app.post('/login', function(req,res){
     req.assert('username', 'Username is required').notEmpty()
     req.assert('password', 'Password is required').notEmpty()
@@ -51,10 +51,6 @@ app.post('/login', function(req,res){
       req.flash('error', error_msg)	
       console.log('error', error_msg)	
           
-          /**
-           * Using req.body.name 
-           * because req.param('name') is deprecated
-           */ 
           res.send({ 
               message: 'error',
               err_msg : error_msg
@@ -62,8 +58,8 @@ app.post('/login', function(req,res){
   
     }
 });
-    
 
+//POST METHOD FOR ADDING NEW CALSS
 app.post('/add-class',function(req,res){
 
     req.assert('class_name', 'Class Name is Required').notEmpty();
@@ -86,7 +82,6 @@ app.post('/add-class',function(req,res){
                         message: 'Error in adding Class',
                         err_msg : err
                     })
-                    throw err
                 }
                 
                 
@@ -130,10 +125,6 @@ app.post('/add-class',function(req,res){
         req.flash('error', error_msg)	
         console.log('error', error_msg)	
 		
-		/**
-		 * Using req.body.name 
-		 * because req.param('name') is deprecated
-		 */ 
         res.send({ 
             message: 'error',
             err_msg : error_msg
@@ -142,7 +133,7 @@ app.post('/add-class',function(req,res){
 
 });
 
-
+//POST METHOD FOR ADDING NEW SUBJECT
 app.post('/add-subject',function(req,res){
 
     req.assert('sub_name', 'Class Name is Required').notEmpty();
@@ -165,11 +156,11 @@ app.post('/add-subject',function(req,res){
                         message: 'Error in selection of Subject',
                         err_msg : err
                     })
-                    throw err
+        
                 }
                 
                 
-                if (rows.length <= 0) {   // if not exist not exist
+                if (rows.length <= 0) {   // if not exist
 
                     conn.query('INSERT INTO subject SET ?',values, function(err, result){
                         if (err) {
@@ -217,10 +208,6 @@ app.post('/add-subject',function(req,res){
         req.flash('error', error_msg)	
         console.log('error', error_msg)	
 		
-		/**
-		 * Using req.body.name 
-		 * because req.param('name') is deprecated
-		 */ 
         res.send({ 
             message: 'error',
             err_msg : error_msg
@@ -229,11 +216,10 @@ app.post('/add-subject',function(req,res){
 
 });
 
-
+//POST METHOD FOR REGISTERING NEW STUDENT
 app.post('/add-student',function(req,res){
 
     req.assert('class_id', 'Class Name is Required').notEmpty();
-    req.assert('reg_no', 'Register Number is Required').notEmpty();
     req.assert('std_name', 'Student Name is required').notEmpty();
     req.assert('std_dob', 'Date of Birth is Required').notEmpty();
     req.assert('std_gender', 'Gender is Required').notEmpty();
@@ -247,7 +233,6 @@ app.post('/add-student',function(req,res){
         // Validation Successfull
         let values = {
             fk_int_class_id : req.sanitize('class_id').escape().trim(),
-            int_reg_no : req.sanitize('reg_no').escape().trim(),
             var_std_name : req.sanitize('std_name').escape().trim(),
             date_std_dob : req.sanitize('std_dob').escape().trim(),
             var_std_gender : req.sanitize('std_gender').escape().trim(),
@@ -306,9 +291,9 @@ app.post('/add-student',function(req,res){
 
 });
 
-
+//POST METHOD FOR ADDING TIME TABLE
 app.post('/add-time-table',function(req,res){
-    let tt_id=req.body.tt_id;
+    
     let teacher_id=req.body.teacher_id;
     let tt_day=req.body.tt_day;
     let tt_period=req.body.tt_period;

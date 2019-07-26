@@ -3,11 +3,11 @@ var app = express();
 
 
 app.get('/', function(req, res) {
-	// to views teacher page template
+	// to views teacher page for testing
 	res.end('Teacher Page')
 });
 
-// ADD NEW TEACHER POST ACTION
+// TEACHER SIGNUP POST ACTION
 app.post('/sign-up', function(req, res, next){
   req.assert('teacher_name', 'Name is required').notEmpty()
   req.assert('teacher_gender', 'Gender is required').notEmpty()
@@ -20,17 +20,7 @@ app.post('/sign-up', function(req, res, next){
 
   var errors = req.validationErrors()
     
-  if( !errors ) {   //No errors were found.  Passed Validation!
-		
-		/********************************************
-		 * Express-validator module
-		 
-		req.body.comment = 'a <span>comment</span>';
-		req.body.username = '   a user    ';
-
-		req.sanitize('comment').escape(); // returns 'a comment'
-		req.sanitize('username').trim(); // returns 'a user'
-    ********************************************/
+  if( !errors ) {   //Passed Validation
     
 		var values = {
 			var_teacher_name: req.sanitize('teacher_name').escape().trim(),
@@ -46,11 +36,11 @@ app.post('/sign-up', function(req, res, next){
 		
 		req.getConnection(function(error, conn) {
 			conn.query('INSERT INTO teacher SET ?', values, function(err, result) {
-				//if(err) throw err
+				
 				if (err) {
 					req.flash('error', err)
 					
-					// render to views/user/add.ejs
+					// display error message to user
 					res.send({
             message: 'Error in adding Teacher',
             err_msg : err
@@ -58,7 +48,7 @@ app.post('/sign-up', function(req, res, next){
 				} else {				
 					req.flash('success', 'Data added successfully!')
 					
-					// render to views/user/add.ejs
+					// display success message to user
 					res.send({
             message: 'Added New Teacher',
             result : result				
@@ -67,7 +57,7 @@ app.post('/sign-up', function(req, res, next){
 			})
 		})
 	}
-	else {   //Display errors to user
+	else {   //Display errors to user if validation error occures
 		var error_msg = ''
 		errors.forEach(function(error) {
 			error_msg += error.msg + '<br>'
@@ -75,10 +65,6 @@ app.post('/sign-up', function(req, res, next){
     req.flash('error', error_msg)	
     console.log('error', error_msg)	
 		
-		/**
-		 * Using req.body.name 
-		 * because req.param('name') is deprecated
-		 */ 
         res.send({ 
             message: 'error',
             err_msg : error_msg
@@ -132,10 +118,6 @@ app.post('/login', function(req,res,next){
     req.flash('error', error_msg)	
     console.log('error', error_msg)	
 		
-		/**
-		 * Using req.body.name 
-		 * because req.param('name') is deprecated
-		 */ 
         res.send({ 
             message: 'error',
             err_msg : error_msg
