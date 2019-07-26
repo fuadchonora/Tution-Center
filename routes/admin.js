@@ -315,4 +315,129 @@ app.post('/add-time-table',function(req,res){
 
 });
 
+//POST METHOD FOR ADDING A FEE
+app.use('/add-fee', function(req,res){
+
+    req.assert('fee_type', 'Fee Type is Required').notEmpty();
+    req.assert('fee_name', 'Fee Type is Required').notEmpty();
+    req.assert('last_date', 'Last Date is Required').notEmpty();
+
+    var errors = req.validationErrors();
+
+    if(!errors){
+        // Validation Successfull
+        let values = {
+            var_fee_type : req.sanitize('fee_type').escape().trim(),
+            var_fee_name : req.sanitize('fee_name').escape().trim(),
+            date_fee_last_date : req.sanitize('last_date').escape().trim()
+        }
+
+        req.getConnection(function(error, conn){
+            conn.query('INSERT INTO fees SET ?',values, function(err, result){
+                if (err) {
+                    
+                    // error in adding Fee
+                    req.flash('error', err)
+
+                    res.send({
+                        message: 'Error in adding Fee',
+                        err_msg : err
+                    })
+                    
+                } else {
+                    req.flash('success', 'Fee added successfully!')
+                    
+                    // render success message
+                    res.send({
+                        message: 'Added New Fee',
+                        result : result
+                   })
+                }
+            })
+        })
+    }else{
+        // Validation error occures
+        var error_msg = ''
+		errors.forEach(function(error) {
+			error_msg += error.msg + '<br>'
+		})
+        req.flash('error', error_msg)	
+        console.log('error', error_msg)	
+        
+        //display validation errors to user (temporary)
+        res.send({ 
+            message: 'error',
+            err_msg : error_msg
+        })
+    }
+
+})
+
+//POST METHOD FOR ADDING A PAID FEE
+app.use('/add-paid-fee', function(req,res){
+
+    req.assert('fee_id', 'Exam Name is Required').notEmpty();
+    req.assert('std_id', 'Student Name is Required').notEmpty();
+   
+
+    var errors = req.validationErrors();
+
+    if(!errors){
+        // Validation Successfull
+        let values = {
+            fk_int_fee_id : req.sanitize('fee_id').escape().trim(),
+            fk_int_std_id : req.sanitize('std_id').escape().trim(),
+            var_fee_paid_status : 1,
+            date_fee_paid : "2017-05-21"
+        }
+
+        req.getConnection(function(error, conn){
+            conn.query('INSERT INTO fees_paid SET ? ',values, function(err, result){
+                if (err) {
+                    
+                    // error in adding paid fee
+                    
+                    if(err.errno==1452){
+                        req.flash('Exam or Student Doesn not Exist', err)
+                        res.send({
+                            message: 'Exam or Student Doesn not Exist',
+                            err_msg : err
+                        })
+                    }else{
+                        req.flash('Error in adding Paid Fee', err)
+                        res.send({
+                            message: 'Error in adding Paid Fee',
+                            err_msg : err
+                        })
+                    }
+                    
+                } else {
+                    req.flash('success', 'Paid Fee added successfully!')
+                    
+                    // render success message
+                    res.send({
+                        message: 'Added New Paid Fee',
+                        result : result
+                   })
+                }
+            })
+        })
+    }else{
+        // Validation error occures
+        var error_msg = ''
+		errors.forEach(function(error) {
+			error_msg += error.msg + '<br>'
+		})
+        req.flash('error', error_msg)	
+        console.log('error', error_msg)	
+        
+        //display validation errors to user (temporary)
+        res.send({ 
+            message: 'error',
+            err_msg : error_msg
+        })
+    }
+
+})
+
 module.exports = app;
