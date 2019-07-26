@@ -122,52 +122,187 @@ app.post('/add-class',function(req,res){
 
         })
 
+    }else {   //Display validation errors to user
+		var error_msg = ''
+		errors.forEach(function(error) {
+			error_msg += error.msg + '<br>'
+		})
+        req.flash('error', error_msg)	
+        console.log('error', error_msg)	
+		
+		/**
+		 * Using req.body.name 
+		 * because req.param('name') is deprecated
+		 */ 
+        res.send({ 
+            message: 'error',
+            err_msg : error_msg
+        })
     }
 
 });
 
 
 app.post('/add-subject',function(req,res){
-    var sub_name=req.body.sub_name;
-    var teacher_id=req.body.teacher_id;
-    console.log("Subject Name is "+sub_name+", teacher id is "+teacher_id);
 
-    var sql = "INSERT INTO subject (var_sub_name, fk_int_teacher_id) VALUES ?";
-    var values = [
-        [sub_name, teacher_id]
-    ];
+    req.assert('sub_name', 'Class Name is Required').notEmpty();
+    req.assert('teacher_id', 'Teacher Name is Required').notEmpty();
 
-    connection.query(sql, [values], function (err, result) {
-        if (err) throw err;
-        console.log("Number of records inserted: " + result.affectedRows);
-        res.end("Inserted");
-    });
+    var errors = req.validationErrors();
+
+    if(!errors){  //validation Successfull
+        let values= {
+            "var_sub_name": req.sanitize('sub_name').escape().trim(),
+            "fk_int_teacher_id": req.sanitize('teacher_id').escape().trim()
+        }
+
+        req.getConnection(function(error, conn){
+
+            conn.query('SELECT * FROM subject WHERE var_sub_name = ?', req.sanitize('sub_name').escape().trim(), function(err, rows, fields) {
+                if(err){
+                    req.flash('error', err)
+                    res.send({
+                        message: 'Error in selection of Subject',
+                        err_msg : err
+                    })
+                    throw err
+                }
+                
+                
+                if (rows.length <= 0) {   // if not exist not exist
+
+                    conn.query('INSERT INTO subject SET ?',values, function(err, result){
+                        if (err) {
+                            req.flash('error', err)
+                            
+                            // render error message to user (temporary)
+                            if(err.errno==1452){
+                                console.log('Select a Valid Teacher')
+                                res.send({
+                                    message: 'Select a valid Teacher',
+                                    err_msg : err
+                                })
+                            }else{
+                                res.send({
+                                    message: 'Error in adding Subject',
+                                    err_msg : err
+                                })
+                            }
+                        } else {
+                            req.flash('success', 'Data added successfully!')
+                            
+                            // render success message
+                            res.send({
+                                message: 'Added New Subject',
+                                result : result
+                           })
+                        }
+                    })
+                }
+                else { // if subject exist
+                    res.send({
+                        message: 'Subject already exist',
+                        result: rows
+                    })
+                }
+            })
+
+        })
+
+    }else {   //Display validation errors to user
+		var error_msg = ''
+		errors.forEach(function(error) {
+			error_msg += error.msg + '<br>'
+		})
+        req.flash('error', error_msg)	
+        console.log('error', error_msg)	
+		
+		/**
+		 * Using req.body.name 
+		 * because req.param('name') is deprecated
+		 */ 
+        res.send({ 
+            message: 'error',
+            err_msg : error_msg
+        })
+    }
 
 });
 
 
 app.post('/add-student',function(req,res){
-    let class_id=req.body.class_id;
-    let reg_no=req.body.reg_no;
-    let std_name=req.body.std_name;
-    let std_dob=req.body.std_dob;
-    let std_gender=req.body.std_gender;
-    let std_ph=req.body.std_ph;
-    let std_email=req.body.std_email;
-    let std_address=req.body.std_address;
 
-    console.log("Student Name is "+std_name);
+    req.assert('class_id', 'Class Name is Required').notEmpty();
+    req.assert('reg_no', 'Register Number is Required').notEmpty();
+    req.assert('std_name', 'Student Name is required').notEmpty();
+    req.assert('std_dob', 'Date of Birth is Required').notEmpty();
+    req.assert('std_gender', 'Gender is Required').notEmpty();
+    req.assert('std_ph', 'Phone No. is Required').notEmpty();
+    req.assert('std_email', 'E-mail id is Reqi=uired').notEmpty();
+    req.assert('std_address', 'Address is Required').notEmpty();
 
-    var sql = "INSERT INTO students (fk_int_class_id, int_reg_no, var_std_name,date_std_dob, var_std_gender, var_std_ph, var_std_email, var_std_address) VALUES ?";
-    var values = [
-        [class_id, reg_no, std_name, std_dob, std_gender, std_ph, std_email,std_address]
-    ];
+    var errors = req.validationErrors();
 
-    connection.query(sql, [values], function (err, result) {
-        if (err) throw err;
-        console.log("Number of records inserted: " + result.affectedRows);
-        res.end("Inserted");
-    });
+    if(!errors){
+        // Validation Successfull
+        let values = {
+            fk_int_class_id : req.sanitize('class_id').escape().trim(),
+            int_reg_no : req.sanitize('reg_no').escape().trim(),
+            var_std_name : req.sanitize('std_name').escape().trim(),
+            date_std_dob : req.sanitize('std_dob').escape().trim(),
+            var_std_gender : req.sanitize('std_gender').escape().trim(),
+            var_std_ph : req.sanitize('std_ph').escape().trim(),
+            var_std_email : req.sanitize('std_email').escape().trim(),
+            var_std_address : req.sanitize('std_address').escape().trim()
+        }
+
+        req.getConnection(function(error, conn){
+            conn.query('INSERT INTO students SET ?',values, function(err, result){
+                if (err) {
+                    
+                    // error in adding student
+                    req.flash('error', err)
+
+                    // render error message to user (temporary)
+                    if(err.errno==1452){
+                        console.log('Select a Valid Class')
+                        res.send({
+                            message: 'Select a valid Class',
+                            err_msg : err
+                        })
+                    }else{
+                        res.send({
+                            message: 'Error in adding Student',
+                            err_msg : err
+                        })
+                    }
+                    
+                } else {
+                    req.flash('success', 'Data added successfully!')
+                    
+                    // render success message
+                    res.send({
+                        message: 'Added New Student',
+                        result : result
+                   })
+                }
+            })
+        })
+    }else{
+        // Validation error occures
+        var error_msg = ''
+		errors.forEach(function(error) {
+			error_msg += error.msg + '<br>'
+		})
+        req.flash('error', error_msg)	
+        console.log('error', error_msg)	
+        
+        //display validation errors to user (temporary)
+        res.send({ 
+            message: 'error',
+            err_msg : error_msg
+        })
+    }
 
 });
 
