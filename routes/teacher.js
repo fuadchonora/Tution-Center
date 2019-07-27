@@ -127,4 +127,105 @@ app.post('/login', function(req,res,next){
 
 })
 
+
+//POST METHOD FOR ADDING ATTENDANCE
+app.use('/add-attendance', function(req, res, next){
+  req.assert('std_id', 'Student Name is Required').notEmpty();
+  req.assert('atd_date', 'Date is Required').notEmpty();
+  req.assert('atd_status', 'Status is Required').notEmpty();
+
+  errors = req.validationErrors();
+
+  if(!errors){
+    //validation Successfull
+    values = {
+      fk_int_std_id : req.sanitize('std_id').escape().trim(),
+      date_atd_date : req.sanitize('atd_date').escape().trim(),
+      var_atd_status : req.sanitize('atd_status').escape().trim()
+    }
+
+    where = [
+      req.sanitize('std_id').escape().trim(),
+      req.sanitize('atd_date').escape().trim()
+    ]
+
+  	req.getConnection(function(error, conn) {
+
+      conn.query('SELECT * FROM attendance WHERE fk_int_std_id = ? and date_atd_date = ?', where, function(err, rows, fields) {
+        if(err) throw err
+        
+        // if attendance report not found
+        if (rows.length <= 0) {
+          conn.query('INSERT INTO attendance SET ?', values, function(err, result) {
+				
+            if (err) {
+              req.flash('error', err)
+              
+              // display error message to user
+              res.send({
+                message: 'Error in Reporting Attendance',
+                err_msg : err
+              })
+            } else {				
+              req.flash('success', 'Attendance Reported successfully!')
+              
+              // display success message to user
+              res.send({
+                message: 'Attendance Reported successfully!',
+                result : result				
+              })
+            }
+          })
+        }
+        else { // if attendance report found
+
+          values = [
+            req.sanitize('atd_status').escape().trim(),
+            req.sanitize('std_id').escape().trim(),
+            req.sanitize('atd_date').escape().trim()
+          ]
+
+          conn.query('UPDATE attendance SET var_atd_status = ? where fk_int_std_id = ? and date_atd_date = ?', values, function(err, result) {
+				
+            if (err) {
+              req.flash('error', err)
+              
+              // display error message to user
+              res.send({
+                message: 'Error in Updating Attendance',
+                err_msg : err
+              })
+            } else {				
+              req.flash('success', 'Attendance Report Updated successfully!')
+              
+              // display success message to user
+              res.send({
+                message: 'Attendance Report Updated successfully!',
+                result : result				
+              })
+            }
+          })
+        }
+      })
+
+		})
+    
+  }else{
+    //if Validation error occures
+    var error_msg = ''
+    errors.forEach(function(error) {
+      error_msg += error.msg + '<br>'
+    })
+    req.flash('error', error_msg)	
+    console.log('error', error_msg)	
+    
+        res.send({ 
+            message: 'error',
+            err_msg : error_msg
+        })
+  }
+})
+
+
+
 module.exports = app;
