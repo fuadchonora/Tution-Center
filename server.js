@@ -40,6 +40,14 @@ var router = require('./router');
  */ 
 var expressValidator = require('express-validator')
 app.use(expressValidator())
+app.use(expressValidator({
+	customValidators: {
+	  isPDF: function(value, filename) {
+		var extension = (path.extname(filename)).toLowerCase();
+		return extension == '.pdf';
+	  }
+	}
+  }));
 
 
 /**

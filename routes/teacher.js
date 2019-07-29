@@ -1,6 +1,6 @@
 var express = require('express');
 var app = express();
-
+let bcrypt = require('bcrypt-nodejs');
 
 app.get('/', function(req, res) {
 	// to views teacher page for testing
@@ -19,8 +19,11 @@ app.post('/sign-up', function(req, res, next){
   req.assert('teacher_password', 'Password is required').notEmpty()
 
   var errors = req.validationErrors()
-    
+
   if( !errors ) {   //Passed Validation
+
+    let password = req.sanitize('teacher_password').escape().trim()
+    password = bcrypt.hashSync(password,bcrypt.genSaltSync(),null);
     
 		var values = {
 			var_teacher_name: req.sanitize('teacher_name').escape().trim(),
@@ -30,7 +33,7 @@ app.post('/sign-up', function(req, res, next){
       var_teacher_email: req.sanitize('teacher_email').escape().trim(),
       var_teacher_address: req.sanitize('teacher_address').escape().trim(),
       var_teacher_username: req.sanitize('teacher_username').escape().trim(),
-      var_teacher_password: req.sanitize('teacher_password').escape().trim(),
+      var_teacher_password: password,
       var_teacher_status:0
     }
 		
@@ -65,7 +68,7 @@ app.post('/sign-up', function(req, res, next){
     req.flash('error', error_msg)	
     console.log('error', error_msg)	
 		
-        res.send({ 
+        res.send({
             message: 'error',
             err_msg : error_msg
         })
@@ -82,16 +85,18 @@ app.post('/login', function(req,res,next){
 
   if(!errors){   //validation successfull
 
-    var values = [
-      req.sanitize('username').escape().trim(),
-      req.sanitize('password').escape().trim()
-    ]
-
-    console.log(values);
+    let password = req.sanitize('password').escape().trim()
+    
 
     req.getConnection(function(error, conn) {
-      conn.query('SELECT * FROM teacher WHERE var_teacher_username = ? and var_teacher_password = ?', values, function(err, rows, fields) {
-        if(err) throw err
+      conn.query('SELECT * FROM teacher WHERE var_teacher_username = ?', req.sanitize('username').escape().trim(), function(err, rows, fields) {
+        if(err) {
+          req.flash('Server error', err)
+          res.send({
+            message: 'Server error'
+          })
+        }
+
         
         // if user not found
         if (rows.length <= 0) {
@@ -102,10 +107,23 @@ app.post('/login', function(req,res,next){
         }
         else { // if user found
           // render to user
-          res.send({
-            message: 'Login Success', 
-            result: rows
-          })
+          console.log(rows);
+
+          if(bcrypt.compareSync(password,rows[0].var_teacher_password)){
+            console.log(' login Success');
+            req.flash('login Success')
+            res.send({
+              message: 'Login Success',
+              data: rows[0],
+            })
+          }else {
+              console.log(' Wrong Password');
+              req.flash('error', 'Wrong Password')
+              res.send({
+                message: 'Wrong Password', 
+                result: rows
+              })
+          }
         }
       })
     })
@@ -118,15 +136,14 @@ app.post('/login', function(req,res,next){
     req.flash('error', error_msg)	
     console.log('error', error_msg)	
 		
-        res.send({ 
-            message: 'error',
-            err_msg : error_msg
-        })
+    res.send({ 
+        message: 'error',
+        err_msg : error_msg
+    })
 
   }
 
 })
-
 
 //POST METHOD FOR ADDING ATTENDANCE
 app.use('/add-attendance', function(req, res, next){
@@ -166,7 +183,7 @@ app.use('/add-attendance', function(req, res, next){
                 message: 'Error in Reporting Attendance',
                 err_msg : err
               })
-            } else {				
+            } else {		
               req.flash('success', 'Attendance Reported successfully!')
               
               // display success message to user
@@ -201,7 +218,7 @@ app.use('/add-attendance', function(req, res, next){
               // display success message to user
               res.send({
                 message: 'Attendance Report Updated successfully!',
-                result : result				
+                result : result
               })
             }
           })
@@ -219,12 +236,26 @@ app.use('/add-attendance', function(req, res, next){
     req.flash('error', error_msg)	
     console.log('error', error_msg)	
     
-        res.send({ 
-            message: 'error',
-            err_msg : error_msg
-        })
+    res.send({ 
+        message: 'error',
+        err_msg : error_msg
+    })
   }
 })
+
+//METHODE FOR ADDING EXERCISES
+  app.use('/add-exercises', function(req, res, next){
+
+    req.assert('std_id', 'Student Name is Required.').notEmpty();
+    req.assert('exe_name', 'Exercise name is Required').notEmpty();
+    req.assert('exe_desc', 'Exercise Description is Required').notEmpty();
+    req.assert('exe_date_given', 'Current Date is Required').notEmpty();
+    req.assert('exe_date_submission', 'Date of submission is Required').notEmpty();
+    
+    exe_status=0;
+    
+    errors = req.validationErrors();
+  })
 
 
 

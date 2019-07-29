@@ -219,12 +219,14 @@ app.post('/add-subject',function(req,res){
 //POST METHOD FOR REGISTERING NEW STUDENT
 app.post('/add-student',function(req,res){
 
+    req.assert('myfile', 'Please upload your file in PDF').isPDF(req.files.myfile.name);    
+
     req.assert('class_id', 'Class Name is Required').notEmpty();
     req.assert('std_name', 'Student Name is required').notEmpty();
     req.assert('std_dob', 'Date of Birth is Required').notEmpty();
     req.assert('std_gender', 'Gender is Required').notEmpty();
     req.assert('std_ph', 'Phone No. is Required').notEmpty();
-    req.assert('std_email', 'E-mail id is Reqi=uired').notEmpty();
+    req.assert('std_email', 'E-mail id is Required').notEmpty();
     req.assert('std_address', 'Address is Required').notEmpty();
 
     var errors = req.validationErrors();
