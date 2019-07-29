@@ -146,7 +146,7 @@ app.post('/login', function(req,res,next){
 })
 
 //POST METHOD FOR ADDING ATTENDANCE
-app.use('/add-attendance', function(req, res, next){
+app.post('/add-attendance', function(req, res, next){
   req.assert('std_id', 'Student Name is Required').notEmpty();
   req.assert('atd_date', 'Date is Required').notEmpty();
   req.assert('atd_status', 'Status is Required').notEmpty();
@@ -244,19 +244,74 @@ app.use('/add-attendance', function(req, res, next){
 })
 
 //METHODE FOR ADDING EXERCISES
-  app.use('/add-exercises', function(req, res, next){
+  app.post('/add-exercise', function(req, res, next){
 
     req.assert('std_id', 'Student Name is Required.').notEmpty();
     req.assert('exe_name', 'Exercise name is Required').notEmpty();
     req.assert('exe_desc', 'Exercise Description is Required').notEmpty();
     req.assert('exe_date_given', 'Current Date is Required').notEmpty();
     req.assert('exe_date_submission', 'Date of submission is Required').notEmpty();
-    
-    exe_status=0;
-    
+
     errors = req.validationErrors();
+
+    if(!errors){
+      //validation successfull
+      let values= {
+        fk_int_std_id : req.sanitize('std_id').escape().trim(),
+        var_exe_name : req.sanitize('exe_name').escape().trim(),
+        var_exe_desc : req.sanitize('exe_desc').escape().trim(),
+        date_exe_given : req.sanitize('exe_date_given').escape().trim(),
+        date_exe_submission : req.sanitize('exe_date_submission').escape().trim(),
+        var_exe_status : 0
+      }
+
+      req.getConnection(function(error, conn){
+        conn.query('INSERT INTO exercise SET ?',values, function(err, result){
+            if (err) {
+                
+                // error in adding exercise
+                req.flash('error', err)
+
+                // render error message to user (temporary)
+                if(err.errno==1452){
+                    console.log('Select a Valid Student')
+                    res.send({
+                        message: 'Select a valid Student',
+                        err_msg : err
+                    })
+                }else{
+                    res.send({
+                        message: 'Error in adding exercise',
+                        err_msg : err
+                    })
+                }
+                
+            } else {
+                req.flash('success', 'Data added successfully!')
+                
+                // render success message
+                res.send({
+                    message: 'Added New Exercise for a student',
+                    result : result
+               })
+            }
+        })
+      })
+    }else{
+      //validation error occures
+      var error_msg = ''
+      errors.forEach(function(error) {
+        error_msg += error.msg + '<br>'
+      })
+          req.flash('error', error_msg)	
+          console.log('error', error_msg)	
+          
+          //display validation errors to user (temporary)
+          res.send({ 
+              message: 'error',
+              err_msg : error_msg
+          })
+    }
   })
-
-
 
 module.exports = app;
