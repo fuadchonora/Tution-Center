@@ -1,5 +1,20 @@
 var express = require('express');
 var app = express();
+var multer = require('multer')
+
+//file upload
+var storage = multer.diskStorage({
+    destination:  (req, file, cb) => {
+      cb(null, 'assets/images/'); /* cb(null, 'src/assets/img/');*/
+    },
+    filename:  (req, file, cb) => {
+      let dateTimeStamp = Date.now();
+      let fileName = file.fieldname + '-' + dateTimeStamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]
+      cb(null, fileName);
+    }
+});
+
+var upload = multer({ storage: storage }).single('file')
 
 app.get('/', function(req, res) {
 	// to views admin page template
@@ -219,7 +234,21 @@ app.post('/add-subject',function(req,res){
 //POST METHOD FOR REGISTERING NEW STUDENT
 app.post('/add-student',function(req,res){
 
-    req.assert('myfile', 'Please upload your file in PDF').isPDF(req.files.myfile.name);    
+    console.log(req.file)
+
+
+        upload (req,res,function(err){
+            if(err){
+                req.flash('Error', 'Error in uploading Files')
+                res.send({
+                    message: 'Error in uploading Files',
+               })
+            }
+            let uploadstatus = "Uploaded Successfully"
+        })
+
+
+    
 
     req.assert('class_id', 'Class Name is Required').notEmpty();
     req.assert('std_name', 'Student Name is required').notEmpty();
