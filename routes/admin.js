@@ -14,7 +14,7 @@ var storage = multer.diskStorage({
     }
 });
 
-var upload = multer({ storage: storage }).single('file')
+var upload = multer({ storage: storage })
 
 app.get('/', function(req, res) {
 	// to views admin page template
@@ -232,20 +232,20 @@ app.post('/add-subject',function(req,res){
 });
 
 //POST METHOD FOR REGISTERING NEW STUDENT
-app.post('/add-student',function(req,res){
+app.post('/add-student',upload.single('file'),function(req,res){
 
-    console.log(req.file)
+    // console.log(req.file)
 
 
-        upload (req,res,function(err){
-            if(err){
-                req.flash('Error', 'Error in uploading Files')
-                res.send({
-                    message: 'Error in uploading Files',
-               })
-            }
-            let uploadstatus = "Uploaded Successfully"
-        })
+    //     upload (req,res,function(err){
+    //         if(err){
+    //             req.flash('Error', 'Error in uploading Files')
+    //             res.send({
+    //                 message: 'Error in uploading Files',
+    //            })
+    //         }
+    //         let uploadstatus = "Uploaded Successfully"
+    //     })
 
 
     
@@ -269,7 +269,8 @@ app.post('/add-student',function(req,res){
             var_std_gender : req.sanitize('std_gender').escape().trim(),
             var_std_ph : req.sanitize('std_ph').escape().trim(),
             var_std_email : req.sanitize('std_email').escape().trim(),
-            var_std_address : req.sanitize('std_address').escape().trim()
+            var_std_address : req.sanitize('std_address').escape().trim(),
+            file_std_profile : req.file.destination+req.file.filename
         }
 
         req.getConnection(function(error, conn){
