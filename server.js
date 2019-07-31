@@ -2,22 +2,26 @@ var express = require('express')
 var app = express()
 
 var mysql = require('mysql')
+var passport = require('passport')
+
+app.use(express.static('public'));
+
 
 /**
  * This middleware provides a consistent API 
  * for MySQL connections during request/response life cycle
- */ 
+ */
 var myConnection  = require('express-myconnection')
 /**
  * Store database credentials in a separate config.js file
  * Load the file/module and its values
- */ 
+ */
 var config = require('./config')
 var dbOptions = {
 	host:	  config.database.host,
 	user: 	  config.database.user,
 	password: config.database.password,
-	port: 	  config.database.port, 
+	port: 	  config.database.port,
 	database: config.database.db
 }
 /**
@@ -27,6 +31,7 @@ var dbOptions = {
  * request: Creates new connection per new request. Connection is auto close when response ends.
  */ 
 app.use(myConnection(mysql, dbOptions, 'pool'))
+
 
 
 /**
@@ -70,7 +75,7 @@ app.use(bodyParser.json())
  * generally used to show success or error messages
  * 
  * Flash messages are stored in session
- * So, we also have to install and use 
+ * So, we also have to install and use
  * cookie-parser & session modules
  */
 var flash = require('express-flash')
@@ -85,6 +90,8 @@ app.use(session({
 	cookie: { maxAge: 60000 }
 }))
 app.use(flash())
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 app.use('/', router)

@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 
+try{
 
 app.get('/', function(req, res) {
 	// to views student page for testing
@@ -62,3 +63,11 @@ app.post('/login', function(req,res,next){
   })
   
   module.exports = app;
+
+}catch(e){
+  console.log('error', e)
+  res.send({ 
+      message: 'error',
+      err_msg : e
+  })
+}

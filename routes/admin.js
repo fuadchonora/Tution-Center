@@ -1,11 +1,13 @@
-var express = require('express');
+var express = require('express')
 var app = express();
 var multer = require('multer')
+
+try{
 
 //file upload
 var storage = multer.diskStorage({
     destination:  (req, file, cb) => {
-      cb(null, 'assets/images/'); /* cb(null, 'src/assets/img/');*/
+      cb(null, 'public/assets/images/'); /* cb(null, 'src/assets/img/');*/
     },
     filename:  (req, file, cb) => {
       let dateTimeStamp = Date.now();
@@ -58,7 +60,9 @@ app.post('/login', function(req,res){
         })
       })
   
-    }else{   //Display errors to user  if validation error occures
+    }else{
+
+    //Display errors to user  if validation error occures
           var error_msg = ''
           errors.forEach(function(error) {
               error_msg += error.msg + '<br>'
@@ -236,18 +240,15 @@ app.post('/add-student',upload.single('file'),function(req,res){
 
     // console.log(req.file)
 
-
-    //     upload (req,res,function(err){
-    //         if(err){
-    //             req.flash('Error', 'Error in uploading Files')
-    //             res.send({
-    //                 message: 'Error in uploading Files',
-    //            })
-    //         }
-    //         let uploadstatus = "Uploaded Successfully"
-    //     })
-
-
+    // upload (req,res,function(err){
+    //     if(err){
+    //         req.flash('Error', 'Error in uploading Files')
+    //         res.send({
+    //             message: 'Error in uploading Files',
+    //         })
+    //     }
+    //     let uploadstatus = "Uploaded Successfully"
+    // })
     
 
     req.assert('class_id', 'Class Name is Required').notEmpty();
@@ -311,8 +312,8 @@ app.post('/add-student',upload.single('file'),function(req,res){
 		errors.forEach(function(error) {
 			error_msg += error.msg + '<br>'
 		})
-        req.flash('error', error_msg)	
-        console.log('error', error_msg)	
+        req.flash('error', error_msg)
+        console.log('error', error_msg)
         
         //display validation errors to user (temporary)
         res.send({ 
@@ -473,3 +474,11 @@ app.use('/add-paid-fee', function(req,res){
 })
 
 module.exports = app;
+
+}catch(e){
+    console.log('error', e)
+    res.send({ 
+        message: 'error',
+        err_msg : e
+    })
+}

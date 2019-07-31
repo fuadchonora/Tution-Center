@@ -2,6 +2,8 @@ var express = require('express');
 var app = express();
 let bcrypt = require('bcrypt-nodejs');
 
+try{
+
 app.get('/', function(req, res) {
 	// to views teacher page for testing
 	res.end('Teacher Page')
@@ -315,3 +317,11 @@ app.post('/add-attendance', function(req, res, next){
   })
 
 module.exports = app;
+
+}catch(e){
+  console.log('error', e)
+  res.send({ 
+      message: 'error',
+      err_msg : e
+  })
+}
