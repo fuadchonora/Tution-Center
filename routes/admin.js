@@ -23,6 +23,7 @@ app.get('/', function(req, res) {
 	res.end('Admin Page')
 });
 
+
 //POST METHOD FOR ADMIN LOGIN
 app.post('/login', function(req,res){
     req.assert('username', 'Username is required').notEmpty()
@@ -30,7 +31,7 @@ app.post('/login', function(req,res){
   
     var errors = req.validationErrors()
   
-    if(!errors){   //validation successfull
+    if(!errors){   //validation success
   
       var values = [
         req.sanitize('username').escape().trim(),
