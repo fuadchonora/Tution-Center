@@ -1,13 +1,42 @@
 var express = require('express');
 var app = express();
 let bcrypt = require('bcrypt-nodejs');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
+
+app.use(cookieParser('keyboard cat'))
+app.use(session({
+	secret: 'keyboard cat',
+	resave: false,
+	saveUninitialized: true,
+	cookie: { maxAge: 60000 }
+}))
 
 try{
 
 app.get('/', function(req, res) {
-	// to views teacher page for testing
-	res.end('Teacher Page')
-});
+  if(!req.session.teacher_id){
+    res.redirect('/teacher/login')
+  }else{
+	  // view teacher home page
+	  res.sendfile('index.html')
+  }
+})
+
+app.get('/login', function(req, res){
+  if(req.session.teacher_id){
+    res.redirect('/teacher')
+  }else{
+    res.sendfile('login.html')
+  }
+})
+
+app.get('/logout', function(req, res){
+  req.session.destroy(function(err) {
+    if(err) throw err
+    res.redirect('/teacher')
+  })
+})
 
 // TEACHER SIGNUP POST ACTION
 app.post('/sign-up', function(req, res, next){
@@ -80,6 +109,7 @@ app.post('/sign-up', function(req, res, next){
 
 app.post('/login', function(req,res,next){
 
+
   req.assert('username', 'Username is required').notEmpty()
   req.assert('password', 'Password is required').notEmpty()
 
@@ -87,8 +117,9 @@ app.post('/login', function(req,res,next){
 
   if(!errors){   //validation successfull
 
+    let username = req.sanitize('username').escape().trim()
     let password = req.sanitize('password').escape().trim()
-    
+
 
     req.getConnection(function(error, conn) {
       conn.query('SELECT * FROM teacher WHERE var_teacher_username = ?', req.sanitize('username').escape().trim(), function(err, rows, fields) {
@@ -99,7 +130,6 @@ app.post('/login', function(req,res,next){
           })
         }
 
-        
         // if user not found
         if (rows.length <= 0) {
           req.flash('error', 'User not found')
@@ -112,12 +142,17 @@ app.post('/login', function(req,res,next){
           console.log(rows);
 
           if(bcrypt.compareSync(password,rows[0].var_teacher_password)){
-            console.log(' login Success');
-            req.flash('login Success')
-            res.send({
-              message: 'Login Success',
-              data: rows[0],
-            })
+            console.log('login Success');
+            req.session.teacher_id=rows[0].pk_int_teacher_id
+            console.log('teacher id:'+req.session.teacher_id)
+            res.redirect('/teacher')
+
+            // req.flash('login Success')
+            // res.send({
+            //   message: 'Login Success',
+            //   data: rows[0],
+            // })
+
           }else {
               console.log(' Wrong Password');
               req.flash('error', 'Wrong Password')
@@ -144,8 +179,8 @@ app.post('/login', function(req,res,next){
     })
 
   }
+});
 
-})
 
 //POST METHOD FOR ADDING ATTENDANCE
 app.post('/add-attendance', function(req, res, next){
@@ -246,7 +281,7 @@ app.post('/add-attendance', function(req, res, next){
 })
 
 //METHODE FOR ADDING EXERCISES
-  app.post('/add-exercise', function(req, res, next){
+app.post('/add-exercise', function(req, res, next){
 
     req.assert('std_id', 'Student Name is Required.').notEmpty();
     req.assert('exe_name', 'Exercise name is Required').notEmpty();
@@ -318,10 +353,6 @@ app.post('/add-attendance', function(req, res, next){
 
 module.exports = app;
 
-}catch(e){
+}catch(e) {
   console.log('error', e)
-  res.send({ 
-      message: 'error',
-      err_msg : e
-  })
 }

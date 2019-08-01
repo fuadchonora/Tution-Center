@@ -67,7 +67,7 @@ app.post('/login', function(req,res,next){
 }catch(e){
   console.log('error', e)
   res.send({ 
-      message: 'error',
+      message: 'Something went wrong..! Please try again later',
       err_msg : e
   })
 }

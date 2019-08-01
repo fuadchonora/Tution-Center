@@ -79,16 +79,7 @@ app.use(bodyParser.json())
  * cookie-parser & session modules
  */
 var flash = require('express-flash')
-var cookieParser = require('cookie-parser');
-var session = require('express-session');
 
-app.use(cookieParser('keyboard cat'))
-app.use(session({
-	secret: 'keyboard cat',
-	resave: false,
-	saveUninitialized: true,
-	cookie: { maxAge: 60000 }
-}))
 app.use(flash())
 app.use(passport.initialize());
 app.use(passport.session());

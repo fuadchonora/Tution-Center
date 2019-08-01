@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Hello world</title>
+   </head>
+   <script src = "/socket.io/socket.io.js"></script>
+   
+   <script>
+      var socket = io();
+      socket.on('message', function(data){document.write(data)});
+   </script>
+   <body>
+      Hello world
+      User is logged in <a href="/teacher/logout">Click Here</a>to logout
+   </body>
+   
+</html>
